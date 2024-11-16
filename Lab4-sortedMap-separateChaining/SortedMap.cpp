@@ -6,7 +6,7 @@ using namespace std;
 
 SortedMap::SortedMap(Relation r) {
     rel = r;
-    maxCapacity = 8;
+    maxCapacity = 4;
     sizeBag = 0;
     Table = new Node * [maxCapacity];
     initTable();
@@ -15,27 +15,37 @@ SortedMap::SortedMap(Relation r) {
 void SortedMap::resizeRehash() {
     int oldCapacity = maxCapacity;
     maxCapacity *= 2;
-    Node** newTable = new Node*[maxCapacity];
+    Node ** newTable = new Node * [maxCapacity];
+    
+    // Initialize new table with nullptr
     for (int i = 0; i < maxCapacity; i++) {
         newTable[i] = nullptr;
     }
 
-    std::cout << "Starting resize rehash. Old capacity: " << oldCapacity << ", New capacity: " << maxCapacity << std::endl;
+    std::cout << "Starting resize rehash. Old capacity: " << oldCapacity
+              << ", New capacity: " << maxCapacity << std::endl;
 
     for (int i = 0; i < oldCapacity; i++) {
-        Node* current = Table[i];
+        Node *current = Table[i];
         while (current != nullptr) {
-            Node* nextNode = current->next;
+            Node *nextNode = current->next;
             int newIndex = h(current->element.first);
 
+            std::cout << "Rehashing element (" << current->element.first << ", "
+                      << current->element.second << ") from old index " << i
+                      << " to new index " << newIndex << std::endl;
+
+            // Insert in sorted order within the new bucket
             if (newTable[newIndex] == nullptr) {
+                // If the bucket is empty
                 current->next = nullptr;
                 newTable[newIndex] = current;
+                std::cout << "Inserted at start of empty bucket " << newIndex << std::endl;
             } else {
-                Node* bucketCurrent = newTable[newIndex];
-                Node* bucketPrev = nullptr;
-
-                // Insert in sorted order within the bucket according to `rel`
+                // If bucket is not empty, insert in sorted order
+                Node *bucketCurrent = newTable[newIndex];
+                Node *bucketPrev = nullptr;
+                
                 while (bucketCurrent != nullptr && rel(bucketCurrent->element.first, current->element.first)) {
                     bucketPrev = bucketCurrent;
                     bucketCurrent = bucketCurrent->next;
@@ -44,37 +54,47 @@ void SortedMap::resizeRehash() {
                 if (bucketPrev == nullptr) {
                     current->next = newTable[newIndex];
                     newTable[newIndex] = current;
+                    std::cout << "Inserted at head of bucket " << newIndex
+                              << ", before (" << bucketCurrent->element.first
+                              << ", " << bucketCurrent->element.second << ")" << std::endl;
                 } else {
                     bucketPrev->next = current;
                     current->next = bucketCurrent;
+                    std::cout << "Inserted after (" << bucketPrev->element.first
+                              << ", " << bucketPrev->element.second
+                              << ") in bucket " << newIndex << std::endl;
                 }
             }
-            
+
             current = nextNode;
         }
     }
 
-    delete[] Table;
-    Table = newTable;
-    updateAlpha();
-
-    // Debugging print for each bucket after rehashing
+    // After rehashing, print the new table structure
     std::cout << "New table structure after rehashing:" << std::endl;
     for (int i = 0; i < maxCapacity; i++) {
         std::cout << "Bucket " << i << ": ";
-        Node* temp = newTable[i];
+        Node * temp = newTable[i];
         while (temp != nullptr) {
             std::cout << "(" << temp->element.first << ", " << temp->element.second << ") -> ";
             temp = temp->next;
         }
         std::cout << "nullptr" << std::endl;
     }
+
+    delete [] Table;
+    Table = newTable;
+    updateAlpha();
     std::cout << "Resize rehash complete." << std::endl;
 }
-// Hash position
+
+//hash
 int SortedMap::h(TKey key) const {
-    return abs(key) % maxCapacity;
+    int index = std::abs(key) % maxCapacity;
+    std::cout << "Key " << key << " hashes to bucket " << index << std::endl;
+    return index;
 }
+
 //update alpha
 void SortedMap::updateAlpha(){
     alphaLoadFactor = static_cast<float>(sizeBag)/maxCapacity;
@@ -87,10 +107,10 @@ void SortedMap::initTable(){
 };
 
 TValue SortedMap::add(TKey k, TValue v) {
-    if (alphaLoadFactor > 0.7) {
+    if (alphaLoadFactor > 0.8) {
         resizeRehash();
     }
-
+    std::cout << "Adding (" << k << ", " << v << ") to SortedMap" << std::endl;
     int pos = h(k);
     std::cout << "Adding (" << k << ", " << v << ") to position " << pos << std::endl;
 

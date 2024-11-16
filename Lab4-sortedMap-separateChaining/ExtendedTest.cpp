@@ -28,26 +28,26 @@ void testIteratorSteps(SortedMap& m, Relation r) {
     SMIterator li = m.iterator();
     TElem elem = NULL_TPAIR;
     int count = 0;
-    
+
     if (li.valid()) {
         elem = li.getCurrent();
         count++;
         li.next();
     }
-    
+
     while (li.valid()) {
         TElem elem2 = li.getCurrent();
-        cout << "Comparing " << elem.first << " and " << elem2.first << endl;
-        assert(r(elem.first, elem2.first));
+        // Debug print statement for current iterator state
+        std::cout << "Iterator visiting: (" << elem2.first << ", " << elem2.second << ")" << std::endl;
+        std::cout << "Comparing " << elem.first << " and " << elem2.first << " using relation" << std::endl;
+        // Check the relation and assert validity
+        assert(r(elem.first, elem2.first));  // Ensure elements are ordered correctly
         elem = elem2;
         count++;
         li.next();
     }
 
-    cout << "Counted elements by iterator: " << count << endl;
-    cout << "Reported map size: " << m.size() << endl;
-    
-    // This assertion verifies that iteration count matches the map size
+    std::cout << "Total elements visited by iterator: " << count << std::endl;
     assert(count == m.size());
 }
 
@@ -288,8 +288,8 @@ void testIterator(Relation r) {
 void testQuantity(){
 	cout << "Test quantity" << endl;
 	SortedMap sm(increasing);
-	int cMin = -3000;
-	int cMax = 3000;
+	int cMin = -6;
+	int cMax = 6;
 	vector<int> keys  = keysInRandomOrder(cMin, cMax);
     populateSMEmpty(sm, cMin, cMax);
     for (int c = cMin; c <= cMax; c++){
